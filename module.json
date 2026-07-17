@@ -2,7 +2,7 @@
   "id": "markdown-importer",
   "title": "Markdown Importer",
   "description": "A Foundry VTT module that lets you drag and drop markdown files onto the canvas to instantly import them as journal entries, NPC actors, or player characters. Automatically parses stat blocks, features, actions, spells, and lore. Icons and class data are looked up from your installed compendiums.",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "compatibility": {
     "minimum": "12",
     "verified": "14",
@@ -27,7 +27,7 @@
   },
   "url": "https://github.com/Reetro/Markdown-Importer",
   "manifest": "https://raw.githubusercontent.com/Reetro/Markdown-Importer/main/module.json",
-  "download": "https://github.com/Reetro/Markdown-Importer/releases/download/1.0/Markdown.Importer.zip",
+  "download": "https://github.com/Reetro/Markdown-Importer/releases/download/1.1/Markdown.Importer.zip",
   "readme": "https://raw.githubusercontent.com/Reetro/Markdown-Importer/main/README.md",
   "bugs": "https://github.com/Reetro/Markdown-Importer/issues",
   "changelog": "https://github.com/Reetro/Markdown-Importer/releases",
