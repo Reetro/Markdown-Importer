@@ -156,7 +156,7 @@ async function buildSpell(sp) {
       activation:  { type: sp.activationType, cost: 1 },
       range:       sp.range,
       components:  sp.components,
-      duration:    sp.duration,
+      duration:    sp.duration || { value: "", units: "inst" },
       damage:      sp.damage || { parts: [] },
       save:        sp.save || { ability: "", dc: null, scaling: "spell" },
       preparation: { mode: "prepared", prepared: true },

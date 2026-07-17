@@ -156,7 +156,25 @@ function extractEquipment(text, keys = ["Equipment"]) {
     .filter(Boolean);
 }
 
-function extractSpells(text, keys = ["Spells", "Spell List"]) {
+function parseDuration(raw) {
+  if (!raw) return { value: "", units: "inst" };
+  const lower = raw.toLowerCase().trim();
+  if (/instant/i.test(lower)) return { value: "", units: "inst" };
+  if (/concentration/i.test(lower)) {
+    const num = lower.match(/(\d+)/);
+    const unit = /hour/i.test(lower) ? "hour" : /minute/i.test(lower) ? "minute" : "round";
+    return { value: num ? num[1] : "1", units: unit, concentration: true };
+  }
+  if (/until dispelled/i.test(lower)) return { value: "", units: "disp" };
+  if (/permanent/i.test(lower))       return { value: "", units: "perm" };
+  const num  = lower.match(/(\d+)/);
+  const unit = /hour/i.test(lower)   ? "hour"
+             : /minute/i.test(lower) ? "minute"
+             : /round/i.test(lower)  ? "round"
+             : /day/i.test(lower)    ? "day"
+             : "round";
+  return { value: num ? num[1] : "1", units: unit };
+}
   const raw = getSectionText(text, ...keys);
   if (!raw) return [];
 
@@ -198,10 +216,7 @@ function extractSpells(text, keys = ["Spells", "Spell List"]) {
         vocal: /\bV\b/.test(cmp), somatic: /\bS\b/.test(cmp),
         material: /\bM\b/.test(cmp), value: matM?.[1] || "",
       },
-      duration: {
-        value: durM ? durM[1].trim() : "Instantaneous",
-        concentration: /concentration/i.test(durM?.[1] || ""),
-      },
+      duration: parseDuration(durM ? durM[1] : null),
       damage: dmgM
         ? { parts: [[dmgM[1], DAMAGE_TYPE_MAP[dmgM[2].toLowerCase()] || dmgM[2].toLowerCase()]] }
         : null,
