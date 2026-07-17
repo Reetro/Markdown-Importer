@@ -2,29 +2,6 @@
 
 Drag and drop markdown files onto the Foundry canvas to import them as NPC actors, player characters, or journal entries.
 
----
-
-## Installation
-
-1. Copy the `lawbrand-importer` folder into your Foundry modules directory:
-
-```
-<User Data Path>/Data/modules/lawbrand-importer/
-```
-
-Find your User Data Path in Foundry under **Setup > Configuration > User Data Path**.
-
-On a standard Linux install this is usually:
-
-```
-~/.local/share/FoundryVTT/Data/modules/
-```
-
-2. Enable the module in **Settings > Manage Modules**
-3. Save and reload
-
----
-
 ## How to Use
 
 1. Open your Foundry world to any scene
