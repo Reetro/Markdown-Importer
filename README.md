@@ -1,4 +1,5 @@
-Markdown Importer
+# Markdown Importer
+
 A Foundry VTT module for the D&D 5e system that allows you to import markdown files directly into Foundry by dragging and dropping them onto the canvas.
 Drop any .md file onto the Foundry canvas and choose what to create:
 
