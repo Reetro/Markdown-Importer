@@ -8,7 +8,7 @@ export function askImportType(filename) {
         <p style="font-size:15px; font-weight:600; margin:0 0 6px 0; word-break:break-all">
           ${filename}
         </p>
-        <p style="font-size:13px; color:#aaa; margin:0 0 4px 0">
+        <p style="font-size:13px; margin:0 0 4px 0">
           What should this file become in Foundry?
         </p>
       </div>
@@ -50,7 +50,7 @@ export function askImportType(filename) {
             <label style="display:flex; align-items:flex-start; gap:10px; background:rgba(255,255,255,0.05); border:1px solid #555; border-radius:4px; padding:10px 12px; cursor:pointer">
               <input type="checkbox" id="md-lookup" style="width:16px; height:16px; margin-top:2px; flex-shrink:0; cursor:pointer">
               <span>
-                <strong style="display:block; font-size:13px; color:#ddd; margin-bottom:3px">
+                <strong style="display:block; font-size:13px; margin-bottom:3px">
                   Normalise skill and damage names
                 </strong>
                 <span style="font-size:12px; line-height:1.4">
@@ -61,12 +61,13 @@ export function askImportType(filename) {
           </div>
         `);
 
-        // Force window size — Foundry v14 ignores width/height constructor options
+        // Force window size via DOM — Foundry v14 ignores width/height constructor options
         const el = win[0];
         if (el) {
-          el.style.width    = "640px";
-          el.style.minHeight = "260px";
-          el.style.height   = "auto";
+          el.style.width     = "700px";
+          el.style.minHeight = "280px";
+          el.style.height    = "auto";
+          el.style.left      = `${Math.max(0, (window.innerWidth - 700) / 2)}px`;
         }
       },
     });

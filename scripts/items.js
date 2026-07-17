@@ -5,25 +5,58 @@ import { DAMAGE_TYPE_MAP } from "./constants.js";
 import { abilityMod } from "./parser.js";
 import { resolveIcon } from "./icons.js";
 
+// ─── Tab placement in dnd5e v3+ ───────────────────────────────────────────────
+// type.value controls which Features section an item appears in
+// activation.type controls whether it shows in Actions tab
+//
+// Passive traits:          type.value="monster", activation.type=""  → Features tab
+// Active NPC actions:      type.value="monster", activation.type="action" → Actions tab
+// Reactions:               type.value="monster", activation.type="reaction" → Actions tab
+// Bonus actions:           type.value="monster", activation.type="bonus" → Actions tab
+// Weapons:                 type="weapon", activation.type="action" → Actions tab
+
 function isAttack(f) {
-  // Exclude Multiattack by name — it describes attacks but is not itself an attack roll
   if (/^multiattack$/i.test(f.name.trim())) return false;
-  // Must contain the exact DnD attack notation with a colon
-  // e.g. "Melee Weapon Attack: +8 to hit"
   return /(?:melee|ranged) weapon attack:/i.test(f.description);
 }
 
 export async function attachItems(actor, p, actorType) {
   const allFeatures = [...p.traits, ...p.features];
 
-  for (const f of allFeatures)    await safeCreate(actor, await featItem(f, "passive"));
-  for (const f of p.actions)      await safeCreate(actor, await (isAttack(f) ? attackItem(f, p) : featItem(f, "action")));
-  for (const f of p.reactions)    await safeCreate(actor, await featItem(f, "reaction"));
-  for (const f of p.bonusActions) await safeCreate(actor, await featItem(f, "bonus"));
-  for (const sp of p.spells)      await safeCreate(actor, await spellItem(sp));
+  // Passive features — Features tab
+  for (const f of allFeatures) {
+    await safeCreate(actor, await buildFeat(f, ""));
+  }
 
+  // Actions — Actions tab
+  for (const f of p.actions) {
+    if (isAttack(f)) {
+      await safeCreate(actor, await buildWeapon(f, p));
+    } else {
+      await safeCreate(actor, await buildFeat(f, "action"));
+    }
+  }
+
+  // Reactions — Actions tab
+  for (const f of p.reactions) {
+    await safeCreate(actor, await buildFeat(f, "reaction"));
+  }
+
+  // Bonus actions — Actions tab
+  for (const f of p.bonusActions) {
+    await safeCreate(actor, await buildFeat(f, "bonus"));
+  }
+
+  // Spells — Spells tab
+  for (const sp of p.spells) {
+    await safeCreate(actor, await buildSpell(sp));
+  }
+
+  // Equipment — Gear tab (PC only)
   if (actorType === "character") {
-    for (const eq of p.equipment) await safeCreate(actor, await equipmentItem(eq));
+    for (const eq of p.equipment) {
+      await safeCreate(actor, await buildEquipment(eq));
+    }
   }
 }
 
@@ -35,30 +68,29 @@ async function safeCreate(actor, itemData) {
   }
 }
 
-async function featItem(f, activation) {
-  const isPassive = activation === "passive";
+// ─── Item builders ────────────────────────────────────────────────────────────
 
+async function buildFeat(f, activationType) {
+  const isPassive = !activationType;
   return {
     name: f.name,
     type: "feat",
     img:  await resolveIcon(f.name, "feat"),
     system: {
       description: { value: `<p>${f.description}</p>` },
-      // Passive traits use "monster" type to appear in Features tab
-      // Active abilities use empty type so activation.type controls placement
-      type: { value: isPassive ? "monster" : "", subtype: "" },
-      activation: {
-        type: isPassive ? "" : activation,
+      type:        { value: "monster", subtype: "" },
+      activation:  {
+        type: activationType || "",
         cost: isPassive ? null : 1,
       },
     },
   };
 }
 
-async function attackItem(f, p) {
-  const atkM  = f.description.match(/\+([\d]+) to hit/i);
-  const dmgM  = f.description.match(/([\d]+)\s*\(([\ddD+\-\s]+)\)\s+(\w+)\s+damage/i);
-  const dmgT  = dmgM ? DAMAGE_TYPE_MAP[dmgM[3].toLowerCase()] || dmgM[3].toLowerCase() : "bludgeoning";
+async function buildWeapon(f, p) {
+  const atkM = f.description.match(/\+([\d]+) to hit/i);
+  const dmgM = f.description.match(/([\d]+)\s*\(([\ddD+\-\s]+)\)\s+(\w+)\s+damage/i);
+  const dmgT = dmgM ? DAMAGE_TYPE_MAP[dmgM[3].toLowerCase()] || dmgM[3].toLowerCase() : "bludgeoning";
 
   return {
     name: f.name,
@@ -71,14 +103,14 @@ async function attackItem(f, p) {
       attackBonus: atkM
         ? +atkM[1] - abilityMod(p.abilities.str) - p.profBonus
         : 0,
-      damage:    { parts: dmgM ? [[dmgM[2].trim(), dmgT]] : [["1d6", "bludgeoning"]] },
-      equipped:  true,
+      damage:     { parts: dmgM ? [[dmgM[2].trim(), dmgT]] : [["1d6", "bludgeoning"]] },
+      equipped:   true,
       proficient: true,
     },
   };
 }
 
-async function spellItem(sp) {
+async function buildSpell(sp) {
   return {
     name: sp.name,
     type: "spell",
@@ -98,7 +130,7 @@ async function spellItem(sp) {
   };
 }
 
-async function equipmentItem(name) {
+async function buildEquipment(name) {
   return {
     name,
     type: "equipment",
