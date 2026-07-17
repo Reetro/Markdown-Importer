@@ -15,8 +15,6 @@ Drag and drop markdown files onto the Foundry canvas to import them as NPC actor
 | Journal Entry | Creates a formatted journal page |
 | Cancel | Skips this file |
 
-4. Optionally tick **Look up ability names online** to match skill and damage type names to their D&D Beyond counterparts before import
-
 ---
 
 ## What Gets Parsed
