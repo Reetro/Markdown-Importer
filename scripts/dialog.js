@@ -51,10 +51,10 @@ export function askImportType(filename) {
               <input type="checkbox" id="md-lookup" style="width:16px; height:16px; margin-top:2px; flex-shrink:0; cursor:pointer">
               <span>
                 <strong style="display:block; font-size:13px; color:#ddd; margin-bottom:3px">
-                  Look up ability names online
+                  Normalise skill and damage names
                 </strong>
-                <span style="font-size:12px; color:#999; line-height:1.4">
-                  Matches skill and damage type names to their D&amp;D Beyond counterparts
+                <span style="font-size:12px; line-height:1.4">
+                  Formats skill and damage type names to match Foundry's internal naming conventions before importing
                 </span>
               </span>
             </label>
