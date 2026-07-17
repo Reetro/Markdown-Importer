@@ -31,29 +31,33 @@ export function askImportType(filename) {
       `,
       buttons: [
         {
-          label: "<i class='fas fa-dragon'></i> NPC Actor",
-          action: "npc",
+          icon:     "fa-dragon",
+          label:    "NPC Actor",
+          action:   "npc",
           callback: (event, button, dialog) => ({
             type: "npc",
             useLookup: dialog.element.querySelector("#md-lookup")?.checked ?? false,
           }),
         },
         {
-          label: "<i class='fas fa-user'></i> Player Character",
-          action: "pc",
+          icon:     "fa-user",
+          label:    "Player Character",
+          action:   "pc",
           callback: (event, button, dialog) => ({
             type: "pc",
             useLookup: dialog.element.querySelector("#md-lookup")?.checked ?? false,
           }),
         },
         {
-          label: "<i class='fas fa-book-open'></i> Journal Entry",
-          action: "journal",
+          icon:     "fa-book-open",
+          label:    "Journal Entry",
+          action:   "journal",
           callback: () => ({ type: "journal", useLookup: false }),
         },
         {
-          label: "<i class='fas fa-times'></i> Cancel",
-          action: "cancel",
+          icon:     "fa-times",
+          label:    "Cancel",
+          action:   "cancel",
           callback: () => null,
         },
       ],
