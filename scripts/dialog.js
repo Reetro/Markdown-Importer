@@ -35,7 +35,7 @@ export function askImportType(filename) {
           action: "npc",
           callback: (event, button, dialog) => ({
             type: "npc",
-            useLookup: dialog.querySelector("#md-lookup")?.checked ?? false,
+            useLookup: dialog.element.querySelector("#md-lookup")?.checked ?? false,
           }),
         },
         {
@@ -43,7 +43,7 @@ export function askImportType(filename) {
           action: "pc",
           callback: (event, button, dialog) => ({
             type: "pc",
-            useLookup: dialog.querySelector("#md-lookup")?.checked ?? false,
+            useLookup: dialog.element.querySelector("#md-lookup")?.checked ?? false,
           }),
         },
         {

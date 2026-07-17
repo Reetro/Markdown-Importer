@@ -1,12 +1,8 @@
 // Markdown Importer — settings.js
-// Registers module settings and provides the settings config form
 
 const MODULE_ID = "markdown-importer";
 
-// ─── Default values ───────────────────────────────────────────────────────────
-
 const DEFAULTS = {
-  // Section heading keywords — comma separated, case insensitive
   loresections:        "Lore, Who He Is, Who She Is, Who They Are, Biography, Details, Public",
   traitSections:       "Racial Traits, Traits",
   featureSections:     "Class Features, Features",
@@ -18,201 +14,136 @@ const DEFAULTS = {
   idealSections:       "Ideals",
   bondSections:        "Bonds",
   flawSections:        "Flaws",
-
-  // Parsing behaviour
   normaliseNames:      false,
   defaultActorType:    "npc",
   searchHeaderLines:   10,
-
-  // Icon behaviour
   useCompendiumIcons:  true,
 };
 
-// ─── Register settings ────────────────────────────────────────────────────────
-
 export function registerSettings() {
-  // Hidden data store for all section keywords — accessed via the config form
-  game.settings.register(MODULE_ID, "loresections", {
-    name: "Lore Section Keywords",
-    scope: "world",
-    config: false,
-    type: String,
-    default: DEFAULTS.loreSections,
-  });
+  const keys = [
+    "loresections","traitSections","featureSections","actionSections",
+    "reactionSections","bonusActionSections","spellSections",
+    "equipmentSections","idealSections","bondSections","flawSections",
+    "defaultActorType",
+  ];
 
-  game.settings.register(MODULE_ID, "traitSections", {
-    name: "Trait Section Keywords",
-    scope: "world",
-    config: false,
-    type: String,
-    default: DEFAULTS.traitSections,
-  });
-
-  game.settings.register(MODULE_ID, "featureSections", {
-    name: "Feature Section Keywords",
-    scope: "world",
-    config: false,
-    type: String,
-    default: DEFAULTS.featureSections,
-  });
-
-  game.settings.register(MODULE_ID, "actionSections", {
-    name: "Action Section Keywords",
-    scope: "world",
-    config: false,
-    type: String,
-    default: DEFAULTS.actionSections,
-  });
-
-  game.settings.register(MODULE_ID, "reactionSections", {
-    name: "Reaction Section Keywords",
-    scope: "world",
-    config: false,
-    type: String,
-    default: DEFAULTS.reactionSections,
-  });
-
-  game.settings.register(MODULE_ID, "bonusActionSections", {
-    name: "Bonus Action Section Keywords",
-    scope: "world",
-    config: false,
-    type: String,
-    default: DEFAULTS.bonusActionSections,
-  });
-
-  game.settings.register(MODULE_ID, "spellSections", {
-    name: "Spell Section Keywords",
-    scope: "world",
-    config: false,
-    type: String,
-    default: DEFAULTS.spellSections,
-  });
-
-  game.settings.register(MODULE_ID, "equipmentSections", {
-    name: "Equipment Section Keywords",
-    scope: "world",
-    config: false,
-    type: String,
-    default: DEFAULTS.equipmentSections,
-  });
-
-  game.settings.register(MODULE_ID, "idealSections", {
-    name: "Ideal Section Keywords",
-    scope: "world",
-    config: false,
-    type: String,
-    default: DEFAULTS.idealSections,
-  });
-
-  game.settings.register(MODULE_ID, "bondSections", {
-    name: "Bond Section Keywords",
-    scope: "world",
-    config: false,
-    type: String,
-    default: DEFAULTS.bondSections,
-  });
-
-  game.settings.register(MODULE_ID, "flawSections", {
-    name: "Flaw Section Keywords",
-    scope: "world",
-    config: false,
-    type: String,
-    default: DEFAULTS.flawSections,
-  });
+  for (const key of keys) {
+    game.settings.register(MODULE_ID, key, {
+      scope: "world", config: false,
+      type: String, default: DEFAULTS[key] ?? "",
+    });
+  }
 
   game.settings.register(MODULE_ID, "normaliseNames", {
-    name: "Normalise skill and damage names",
-    scope: "world",
-    config: false,
-    type: Boolean,
-    default: DEFAULTS.normaliseNames,
-  });
-
-  game.settings.register(MODULE_ID, "searchHeaderLines", {
-    name: "Header lines to search for class name",
-    scope: "world",
-    config: false,
-    type: Number,
-    default: DEFAULTS.searchHeaderLines,
+    scope: "world", config: false,
+    type: Boolean, default: false,
   });
 
   game.settings.register(MODULE_ID, "useCompendiumIcons", {
-    name: "Look up icons from compendium",
-    scope: "world",
-    config: false,
-    type: Boolean,
-    default: DEFAULTS.useCompendiumIcons,
+    scope: "world", config: false,
+    type: Boolean, default: true,
   });
 
-  game.settings.register(MODULE_ID, "defaultActorType", {
-    name: "Default import type",
-    scope: "world",
-    config: false,
-    type: String,
-    default: DEFAULTS.defaultActorType,
+  game.settings.register(MODULE_ID, "searchHeaderLines", {
+    scope: "world", config: false,
+    type: Number, default: 10,
   });
 
-  // Register the settings menu button that opens the config form
   game.settings.registerMenu(MODULE_ID, "configMenu", {
-    name: "Markdown Importer Settings",
-    label: "Configure",
-    hint: "Configure how markdown files are parsed and imported into Foundry.",
-    icon: "fas fa-file-import",
-    type: MarkdownImporterConfig,
+    name:     "Markdown Importer Settings",
+    label:    "Configure",
+    hint:     "Configure how markdown files are parsed and imported into Foundry.",
+    icon:     "fas fa-file-import",
+    type:     MarkdownImporterConfig,
     restricted: true,
   });
 }
 
-// ─── Helper to read a setting ─────────────────────────────────────────────────
-
 export function getSetting(key) {
-  try {
-    return game.settings.get(MODULE_ID, key);
-  } catch {
-    return DEFAULTS[key];
-  }
+  try { return game.settings.get(MODULE_ID, key); }
+  catch { return DEFAULTS[key]; }
 }
-
-// ─── Helper to parse a keyword setting into an array ─────────────────────────
 
 export function getKeywords(key) {
   const raw = getSetting(key) || DEFAULTS[key] || "";
   return raw.split(",").map(s => s.trim()).filter(Boolean);
 }
 
-// ─── Settings config form ─────────────────────────────────────────────────────
-
+// ─── Settings form — uses plain FormApplication (works v12-v16) ───────────────
 class MarkdownImporterConfig extends FormApplication {
   static get defaultOptions() {
     return foundry.utils.mergeObject(super.defaultOptions, {
-      id:       "markdown-importer-config",
-      title:    "Markdown Importer — Settings",
-      template: "modules/markdown-importer/templates/settings.html",
-      width:    620,
-      height:   "auto",
+      id:    "markdown-importer-config",
+      title: "Markdown Importer — Settings",
+      width: 620,
+      height: "auto",
       closeOnSubmit: true,
+      template: false,
     });
   }
 
-  getData() {
-    return {
-      loresections:        getSetting("loreections") || DEFAULTS.loreections,
-      traitSections:       getSetting("traitSections")       || DEFAULTS.traitSections,
-      featureSections:     getSetting("featureSections")     || DEFAULTS.featureSections,
-      actionSections:      getSetting("actionSections")      || DEFAULTS.actionSections,
-      reactionSections:    getSetting("reactionSections")    || DEFAULTS.reactionSections,
-      bonusActionSections: getSetting("bonusActionSections") || DEFAULTS.bonusActionSections,
-      spellSections:       getSetting("spellSections")       || DEFAULTS.spellSections,
-      equipmentSections:   getSetting("equipmentSections")   || DEFAULTS.equipmentSections,
-      idealSections:       getSetting("idealSections")       || DEFAULTS.idealSections,
-      bondSections:        getSetting("bondSections")        || DEFAULTS.bondSections,
-      flawSections:        getSetting("flawSections")        || DEFAULTS.flawSections,
-      normaliseNames:      getSetting("normaliseNames"),
-      searchHeaderLines:   getSetting("searchHeaderLines")   || DEFAULTS.searchHeaderLines,
-      useCompendiumIcons:  getSetting("useCompendiumIcons"),
-      defaultActorType:    getSetting("defaultActorType")    || DEFAULTS.defaultActorType,
-    };
+  async _renderInner() {
+    const d = getSetting;
+    const html = `
+      <form style="padding:8px">
+        <p style="margin:0 0 12px 0; font-size:13px; opacity:0.7">
+          Define the section headings the importer looks for in your markdown files.
+          Separate multiple keywords with commas. Matching is case insensitive.
+        </p>
+
+        <fieldset style="border:1px solid var(--border); border-radius:4px; padding:10px; margin-bottom:12px">
+          <legend style="padding:0 6px; font-size:12px; font-weight:500">Section Keywords</legend>
+          ${field("loresections",        "Lore / Biography",   d("loresections"))}
+          ${field("traitSections",       "Traits",             d("traitSections"))}
+          ${field("featureSections",     "Class Features",     d("featureSections"))}
+          ${field("actionSections",      "Actions",            d("actionSections"))}
+          ${field("reactionSections",    "Reactions",          d("reactionSections"))}
+          ${field("bonusActionSections", "Bonus Actions",      d("bonusActionSections"))}
+          ${field("spellSections",       "Spells",             d("spellSections"))}
+          ${field("equipmentSections",   "Equipment",          d("equipmentSections"))}
+        </fieldset>
+
+        <fieldset style="border:1px solid var(--border); border-radius:4px; padding:10px; margin-bottom:12px">
+          <legend style="padding:0 6px; font-size:12px; font-weight:500">Personality Fields (PC only)</legend>
+          ${field("idealSections", "Ideals", d("idealSections"))}
+          ${field("bondSections",  "Bonds",  d("bondSections"))}
+          ${field("flawSections",  "Flaws",  d("flawSections"))}
+        </fieldset>
+
+        <fieldset style="border:1px solid var(--border); border-radius:4px; padding:10px; margin-bottom:12px">
+          <legend style="padding:0 6px; font-size:12px; font-weight:500">Parsing Behaviour</legend>
+          ${number("searchHeaderLines", "Class name search depth (lines)", d("searchHeaderLines"))}
+          ${checkbox("normaliseNames",   "Normalise skill and damage names", d("normaliseNames"))}
+          ${checkbox("useCompendiumIcons","Look up icons from compendium",   d("useCompendiumIcons"))}
+        </fieldset>
+
+        <div style="text-align:right; margin-top:8px">
+          <button type="button" id="md-reset" style="margin-right:8px">
+            <i class="fas fa-undo"></i> Reset to Defaults
+          </button>
+          <button type="submit">
+            <i class="fas fa-save"></i> Save
+          </button>
+        </div>
+      </form>
+    `;
+    const el = document.createElement("div");
+    el.innerHTML = html;
+    el.querySelector("#md-reset")?.addEventListener("click", () => this._reset(el));
+    return $(el);
   }
+
+  _reset(el) {
+    for (const [key, val] of Object.entries(DEFAULTS)) {
+      const input = el.querySelector(`[name="${key}"]`);
+      if (!input) continue;
+      if (input.type === "checkbox") input.checked = !!val;
+      else input.value = val;
+    }
+  }
+
+  getData() { return {}; }
 
   async _updateObject(event, formData) {
     for (const [key, value] of Object.entries(formData)) {
@@ -220,4 +151,28 @@ class MarkdownImporterConfig extends FormApplication {
     }
     ui.notifications.info("Markdown Importer: Settings saved.");
   }
+}
+
+function field(name, label, value) {
+  return `
+    <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px">
+      <label style="min-width:160px; font-size:13px">${label}</label>
+      <input type="text" name="${name}" value="${value ?? ""}" style="flex:1; font-size:13px">
+    </div>`;
+}
+
+function number(name, label, value) {
+  return `
+    <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px">
+      <label style="min-width:220px; font-size:13px">${label}</label>
+      <input type="number" name="${name}" value="${value ?? 10}" min="1" max="30" style="width:60px; font-size:13px">
+    </div>`;
+}
+
+function checkbox(name, label, value) {
+  return `
+    <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px">
+      <input type="checkbox" name="${name}" ${value ? "checked" : ""} style="width:16px; height:16px">
+      <label style="font-size:13px; cursor:pointer">${label}</label>
+    </div>`;
 }

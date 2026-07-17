@@ -175,6 +175,8 @@ function parseDuration(raw) {
              : "round";
   return { value: num ? num[1] : "1", units: unit };
 }
+
+function extractSpells(text, keys = ["Spells", "Spell List"]) {
   const raw = getSectionText(text, ...keys);
   if (!raw) return [];
 
