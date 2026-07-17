@@ -36,13 +36,24 @@ async function safeCreate(actor, itemData) {
 }
 
 async function featItem(f, activation) {
+  // In dnd5e v3+ feat type.value controls which tab the item appears in
+  // "class" = Features tab (passive)
+  // "monster" = Features tab (NPC abilities)
+  // "feat" = Feats tab
+  // Setting it to "monster" for NPC abilities and "class" for passive PC features
+  const featType = activation === "passive" ? "monster" : "monster";
+
   return {
     name: f.name,
     type: "feat",
     img:  await resolveIcon(f.name, "feat"),
     system: {
       description: { value: `<p>${f.description}</p>` },
-      activation:  { type: activation, cost: activation === "passive" ? null : 1 },
+      type:        { value: featType, subtype: "" },
+      activation:  {
+        type:  activation === "passive" ? "" : activation,
+        cost:  activation === "passive" ? null : 1,
+      },
     },
   };
 }

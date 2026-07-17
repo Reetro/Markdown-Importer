@@ -2,6 +2,7 @@
 // Reads raw markdown text and returns a structured data object
 
 import { ABILITY_MAP, DAMAGE_TYPE_MAP, SPELL_SCHOOL_MAP, CLASS_NAMES } from "./constants.js";
+import { getKeywords, getSetting } from "./settings.js";
 
 // ─── Low level helpers ────────────────────────────────────────────────────────
 
@@ -128,32 +129,23 @@ function extractLevel(text) {
   return 1;
 }
 
-function extractClassName(text) {
-  // Explicit field wins
+function extractClassName(text, headerLines = 10) {
   const fromField = getText(text, /\*\*Class\*\*\s*:?\s*([^\n]+)/i);
   if (fromField) return fromField;
 
-  // Only search first 10 lines to avoid false matches in lore or spell text
-  const headerText = text.split("\n").slice(0, 10).join("\n");
+  const headerText = text.split("\n").slice(0, headerLines).join("\n");
   for (const cls of CLASS_NAMES) {
     if (new RegExp(`\\b${cls}\\b`, "i").test(headerText)) return cls;
   }
   return "";
 }
 
-function extractLore(text) {
-  const sections = [
-    getSectionText(text, "Lore"),
-    getSectionText(text, "Who He Is", "Who She Is", "Who They Are"),
-    getSectionText(text, "Biography"),
-    getSectionText(text, "Details"),
-    getSectionText(text, "Public"),
-  ].filter(Boolean);
-  return sections.join("\n\n");
+function extractLore(text, keys = ["Lore", "Who He Is", "Who She Is", "Who They Are", "Biography", "Details", "Public"]) {
+  return keys.map(k => getSectionText(text, k)).filter(Boolean).join("\n\n");
 }
 
-function extractEquipment(text) {
-  const raw = getSectionText(text, "Equipment");
+function extractEquipment(text, keys = ["Equipment"]) {
+  const raw = getSectionText(text, ...keys);
   if (!raw) return [];
   return raw.split("\n")
     .filter(l => l.trim().startsWith("-"))
@@ -161,8 +153,8 @@ function extractEquipment(text) {
     .filter(Boolean);
 }
 
-function extractSpells(text) {
-  const raw = getSectionText(text, "Spells", "Spell List");
+function extractSpells(text, keys = ["Spells", "Spell List"]) {
+  const raw = getSectionText(text, ...keys);
   if (!raw) return [];
 
   const out = [];
@@ -228,9 +220,23 @@ export function parseMarkdown(text) {
   const speedRaw = getText(text, /\*\*Speed\*\*\s+([^\n]+)/i) || "30 ft.";
   const flyMatch = speedRaw.match(/fly\s+(\d+)/i);
 
+  // Read section keywords from settings
+  const loreKeys        = getKeywords("loresections");
+  const traitKeys       = getKeywords("traitSections");
+  const featureKeys     = getKeywords("featureSections");
+  const actionKeys      = getKeywords("actionSections");
+  const reactionKeys    = getKeywords("reactionSections");
+  const bonusKeys       = getKeywords("bonusActionSections");
+  const spellKeys       = getKeywords("spellSections");
+  const equipmentKeys   = getKeywords("equipmentSections");
+  const idealKeys       = getKeywords("idealSections");
+  const bondKeys        = getKeywords("bondSections");
+  const flawKeys        = getKeywords("flawSections");
+  const headerLines     = getSetting("searchHeaderLines") || 10;
+
   return {
     title:          getText(text, /^#\s+(.+)$/m, /^\*\*([^*\n]+)\*\*/m) || "Unknown",
-    className:      extractClassName(text),
+    className:      extractClassName(text, headerLines),
     race:           getText(text, /\*\*Race\*\*\s*:?\s*([^\n]+)/i),
     background:     getText(text, /\*\*Background\*\*\s*:?\s*([^\n]+)/i),
     alignment:      getText(text, /\*\*Alignment\*\*\s*:?\s*([^\n]+)/i),
@@ -250,17 +256,16 @@ export function parseMarkdown(text) {
     vulnerabilities:getText(text, /\*\*Damage Vulnerabilities\*\*\s+([^\n]+)/i),
     senses:         getText(text, /\*\*Senses\*\*\s+([^\n]+)/i),
     languages:      getText(text, /\*\*Languages\*\*\s+([^\n]+)/i),
-    ideals:         sectionToPlain(getSectionText(text, "Ideals")),
-    bonds:          sectionToPlain(getSectionText(text, "Bonds")),
-    flaws:          sectionToPlain(getSectionText(text, "Flaws")),
-    loreRaw:        extractLore(text),
-    // Racial Traits and Class Features both use flexible section matching
-    traits:         getSection(text, "Racial Traits", "Traits"),
-    features:       getSection(text, "Class Features", "Features"),
-    actions:        getSection(text, "Actions"),
-    reactions:      getSection(text, "Reactions"),
-    bonusActions:   getSection(text, "Bonus Actions"),
-    spells:         extractSpells(text),
-    equipment:      extractEquipment(text),
+    ideals:         sectionToPlain(getSectionText(text, ...idealKeys)),
+    bonds:          sectionToPlain(getSectionText(text, ...bondKeys)),
+    flaws:          sectionToPlain(getSectionText(text, ...flawKeys)),
+    loreRaw:        extractLore(text, loreKeys),
+    traits:         getSection(text, ...traitKeys),
+    features:       getSection(text, ...featureKeys),
+    actions:        getSection(text, ...actionKeys),
+    reactions:      getSection(text, ...reactionKeys),
+    bonusActions:   getSection(text, ...bonusKeys),
+    spells:         extractSpells(text, spellKeys),
+    equipment:      extractEquipment(text, equipmentKeys),
   };
 }

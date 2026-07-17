@@ -1,11 +1,75 @@
 # Markdown Importer
 
-A Foundry VTT module for the D&D 5e system that allows you to import markdown files directly into Foundry by dragging and dropping them onto the canvas.
-Drop any .md file onto the Foundry canvas and choose what to create:
+Drag and drop markdown files onto the Foundry canvas to import them as NPC actors, player characters, or journal entries.
 
-Journal Entry — converts the markdown to a formatted Foundry journal page with headers, bold, italic, blockquotes, and lists preserved
-NPC Actor — parses a stat block and creates a full NPC with ability scores, saving throws, skills, traits, actions, reactions, spells, resistances, and biography
-Player Character — creates a character sheet with ability scores, class (looked up from your installed compendiums), features, spells, equipment, personality fields, and biography
+---
 
-Icons are automatically matched by searching your installed compendiums. Class items are pulled directly from the dnd5e compendium at the correct level. No file paths or manual setup required.
-Compatible with: Foundry VTT v12–v14 | D&D 5e system v3.0+
+## Installation
+
+1. Copy the `lawbrand-importer` folder into your Foundry modules directory:
+
+```
+<User Data Path>/Data/modules/lawbrand-importer/
+```
+
+Find your User Data Path in Foundry under **Setup > Configuration > User Data Path**.
+
+On a standard Linux install this is usually:
+
+```
+~/.local/share/FoundryVTT/Data/modules/
+```
+
+2. Enable the module in **Settings > Manage Modules**
+3. Save and reload
+
+---
+
+## How to Use
+
+1. Open your Foundry world to any scene
+2. Drag one or more `.md` files from your file explorer onto the Foundry canvas
+3. A dialog appears for each file with four options:
+
+| Button | Result |
+|---|---|
+| NPC Actor | Creates a full NPC with stat block, traits, actions, reactions |
+| Player Character | Creates a PC sheet with abilities, features, equipment |
+| Journal Entry | Creates a formatted journal page |
+| Cancel | Skips this file |
+
+4. Optionally tick **Look up ability names online** to match skill and damage type names to their D&D Beyond counterparts before import
+
+---
+
+## What Gets Parsed
+
+### NPC and PC Actors
+- Name from the top level heading
+- HP, AC, speed, proficiency bonus, CR
+- All six ability scores from the stat table
+- Saving throws and skills
+- Damage resistances, immunities, vulnerabilities, condition immunities
+- Senses and languages
+- Traits and class features as passive feat items
+- Actions: attacks become weapon items, others become feat items
+- Reactions as reaction items
+- Bonus actions as bonus action items
+
+### PC Only
+- Race, background, alignment, level
+- Equipment lines become loot items
+- Biography from the Lore or Background section
+- Saving throw proficiencies inferred from bonus values
+
+### Journal Entry
+- Top level heading becomes the entry name
+- Full markdown converted to formatted HTML
+- Headers, bold, italic, blockquotes, lists, horizontal rules all preserved
+
+---
+
+## Compatibility
+
+- Foundry VTT v12 to v14
+- D&D 5e system

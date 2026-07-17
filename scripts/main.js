@@ -1,5 +1,5 @@
 // Markdown Importer — main.js
-// Entry point. Registers Foundry hooks and handles canvas file drops.
+// Entry point. Registers settings and handles canvas file drops.
 
 import { parseMarkdown }      from "./parser.js";
 import { createNPCActor,
@@ -7,8 +7,8 @@ import { createNPCActor,
 import { createJournalEntry } from "./journal.js";
 import { askImportType }      from "./dialog.js";
 import { prewarmIconCache }   from "./icons.js";
-
-// ─── Drop handler ─────────────────────────────────────────────────────────────
+import { registerSettings,
+         getSetting }         from "./settings.js";
 
 async function handleFileDrop(files) {
   const mdFiles = [...files].filter(f => f.name.endsWith(".md"));
@@ -23,11 +23,9 @@ async function handleFileDrop(files) {
       if (choice.type === "npc") {
         const actor = await createNPCActor(parseMarkdown(text));
         ui.notifications.info(`Markdown Importer: Created NPC "${actor.name}"`);
-
       } else if (choice.type === "pc") {
         const actor = await createPCActor(parseMarkdown(text));
         ui.notifications.info(`Markdown Importer: Created character "${actor.name}"`);
-
       } else {
         const journal = await createJournalEntry(text, file.name);
         ui.notifications.info(`Markdown Importer: Created journal "${journal.name}"`);
@@ -39,16 +37,13 @@ async function handleFileDrop(files) {
   }
 }
 
-// ─── Hooks ────────────────────────────────────────────────────────────────────
-
 Hooks.once("init", () => {
   console.log("Markdown Importer | Initialising");
+  registerSettings();
 });
 
 Hooks.once("ready", () => {
   console.log("Markdown Importer | Ready — drag .md files onto the canvas to import");
-
-  // Pre-warm icon cache in the background so first import is fast
   prewarmIconCache();
 
   document.body.addEventListener("dragover", e => {

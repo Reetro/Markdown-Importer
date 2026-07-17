@@ -1,0 +1,173 @@
+<form class="markdown-importer-settings">
+
+  <div class="form-group">
+    <p class="notes">
+      Define the section headings the importer looks for in your markdown files.
+      Separate multiple keywords with commas. Matching is case insensitive.
+    </p>
+  </div>
+
+  <hr>
+  <h3>Section Keywords</h3>
+
+  <div class="form-group">
+    <label>Lore / Biography</label>
+    <div class="form-fields">
+      <input type="text" name="loresections" value="{{loresections}}">
+    </div>
+    <p class="notes">Sections placed in the Details biography field.</p>
+  </div>
+
+  <div class="form-group">
+    <label>Traits</label>
+    <div class="form-fields">
+      <input type="text" name="traitSections" value="{{traitSections}}">
+    </div>
+    <p class="notes">Sections parsed as passive feature items.</p>
+  </div>
+
+  <div class="form-group">
+    <label>Class Features</label>
+    <div class="form-fields">
+      <input type="text" name="featureSections" value="{{featureSections}}">
+    </div>
+    <p class="notes">Sections parsed as passive feature items alongside Traits.</p>
+  </div>
+
+  <div class="form-group">
+    <label>Actions</label>
+    <div class="form-fields">
+      <input type="text" name="actionSections" value="{{actionSections}}">
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label>Reactions</label>
+    <div class="form-fields">
+      <input type="text" name="reactionSections" value="{{reactionSections}}">
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label>Bonus Actions</label>
+    <div class="form-fields">
+      <input type="text" name="bonusActionSections" value="{{bonusActionSections}}">
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label>Spells</label>
+    <div class="form-fields">
+      <input type="text" name="spellSections" value="{{spellSections}}">
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label>Equipment</label>
+    <div class="form-fields">
+      <input type="text" name="equipmentSections" value="{{equipmentSections}}">
+    </div>
+  </div>
+
+  <hr>
+  <h3>Personality Fields (Player Characters)</h3>
+
+  <div class="form-group">
+    <label>Ideals</label>
+    <div class="form-fields">
+      <input type="text" name="idealSections" value="{{idealSections}}">
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label>Bonds</label>
+    <div class="form-fields">
+      <input type="text" name="bondSections" value="{{bondSections}}">
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label>Flaws</label>
+    <div class="form-fields">
+      <input type="text" name="flawSections" value="{{flawSections}}">
+    </div>
+  </div>
+
+  <hr>
+  <h3>Parsing Behaviour</h3>
+
+  <div class="form-group">
+    <label>Default Import Type</label>
+    <div class="form-fields">
+      <select name="defaultActorType">
+        <option value="npc"     {{#if (eq defaultActorType "npc")}}selected{{/if}}>NPC Actor</option>
+        <option value="pc"      {{#if (eq defaultActorType "pc")}}selected{{/if}}>Player Character</option>
+        <option value="journal" {{#if (eq defaultActorType "journal")}}selected{{/if}}>Journal Entry</option>
+      </select>
+    </div>
+    <p class="notes">Which button is highlighted by default in the import dialog.</p>
+  </div>
+
+  <div class="form-group">
+    <label>Class Name Search Depth</label>
+    <div class="form-fields">
+      <input type="number" name="searchHeaderLines" value="{{searchHeaderLines}}" min="1" max="30">
+    </div>
+    <p class="notes">Number of lines from the top of the file to search for a class name. Keeping this low avoids false matches in lore or spell text.</p>
+  </div>
+
+  <div class="form-group">
+    <label>Normalise Skill and Damage Names</label>
+    <div class="form-fields">
+      <input type="checkbox" name="normaliseNames" {{#if normaliseNames}}checked{{/if}}>
+    </div>
+    <p class="notes">Formats skill and damage type names to match Foundry's internal naming conventions before importing.</p>
+  </div>
+
+  <div class="form-group">
+    <label>Look Up Icons from Compendium</label>
+    <div class="form-fields">
+      <input type="checkbox" name="useCompendiumIcons" {{#if useCompendiumIcons}}checked{{/if}}>
+    </div>
+    <p class="notes">Search installed compendiums for matching item icons. Disable to always use type defaults.</p>
+  </div>
+
+  <hr>
+
+  <div class="form-group">
+    <button type="button" id="md-reset-defaults" style="width:auto">
+      <i class="fas fa-undo"></i> Reset to Defaults
+    </button>
+  </div>
+
+</form>
+
+<script>
+  document.getElementById("md-reset-defaults").addEventListener("click", () => {
+    if (confirm("Reset all Markdown Importer settings to their defaults?")) {
+      const defaults = {
+        loresections:        "Lore, Who He Is, Who She Is, Who They Are, Biography, Details, Public",
+        traitSections:       "Racial Traits, Traits",
+        featureSections:     "Class Features, Features",
+        actionSections:      "Actions",
+        reactionSections:    "Reactions",
+        bonusActionSections: "Bonus Actions",
+        spellSections:       "Spells, Spell List",
+        equipmentSections:   "Equipment",
+        idealSections:       "Ideals",
+        bondSections:        "Bonds",
+        flawSections:        "Flaws",
+        defaultActorType:    "npc",
+        searchHeaderLines:   10,
+        normaliseNames:      false,
+        useCompendiumIcons:  true,
+      };
+      for (const [key, val] of Object.entries(defaults)) {
+        const el = document.querySelector(`[name="${key}"]`);
+        if (!el) continue;
+        if (el.type === "checkbox") el.checked = val;
+        else el.value = val;
+      }
+    }
+  });
+</script>
