@@ -26,9 +26,9 @@ function getText(text, ...patterns) {
 // Matches "## Section Name" AND "## Section Name (extra stuff)"
 function getSectionText(text, ...names) {
   for (const name of names) {
-    const re = new RegExp(`##\\s+${name}[^\\n]*\\n([\\s\\S]+?)(?=\\n##|\\n---|$)`, "i");
+    const re = new RegExp(`##\\s+${name}[^\\n]*\\n([\\s\\S]+?)(?=\\n##|$)`, "i");
     const m = text.match(re);
-    if (m) return m[1].trim();
+    if (m) return m[1].replace(/^---+\s*$/gm, "").trim();
   }
   return "";
 }
@@ -73,12 +73,15 @@ function parseFeatures(raw) {
 }
 
 // Matches "## Section Name" AND "## Section Name (extra stuff)"
+// Stops at the next ## heading
 function getSection(text, ...names) {
   for (const name of names) {
-    const re = new RegExp(`##\\s+${name}[^\\n]*\\n([\\s\\S]+?)(?=\\n##\\s+|\\n---\\s*\\n(?=\\n*##)|$)`, "i");
+    const re = new RegExp(
+      `##\\s+${name}[^\\n]*\\n([\\s\\S]+?)(?=\\n##|$)`,
+      "i"
+    );
     const m = text.match(re);
     if (m) {
-      // Strip standalone --- dividers within the section before parsing features
       const cleaned = m[1].replace(/^---+\s*$/gm, "").trim();
       return parseFeatures(cleaned);
     }

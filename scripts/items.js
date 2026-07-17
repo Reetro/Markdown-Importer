@@ -39,7 +39,7 @@ export async function attachItems(actor, p, actorType) {
 
   // Reactions — Actions tab
   for (const f of p.reactions) {
-    await safeCreate(actor, await buildFeat(f, "reaction"));
+    await safeCreate(actor, await buildReaction(f));
   }
 
   // Bonus actions — Actions tab
@@ -83,6 +83,19 @@ async function buildFeat(f, activationType) {
         type: activationType || "",
         cost: isPassive ? null : 1,
       },
+    },
+  };
+}
+
+async function buildReaction(f) {
+  return {
+    name: f.name,
+    type: "feat",
+    img:  await resolveIcon(f.name, "feat"),
+    system: {
+      description: { value: `<p>${f.description}</p>` },
+      type:        { value: "monster", subtype: "reaction" },
+      activation:  { type: "reaction", cost: 1 },
     },
   };
 }
