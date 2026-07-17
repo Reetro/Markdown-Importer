@@ -1,0 +1,74 @@
+/* Markdown Importer — dialog styles */
+
+/* Target the actual Foundry dialog window when it has our class */
+.app.dialog.markdown-importer .window-content {
+  padding: 12px;
+}
+
+.app.dialog.markdown-importer .dialog-content {
+  margin-bottom: 12px;
+}
+
+.app.dialog.markdown-importer .dialog-buttons {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+
+/* Inner layout */
+.md-import-body {
+  min-width: 480px;
+  font-family: var(--font-primary, sans-serif);
+}
+
+.md-import-body .md-filename {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0 0 4px 0;
+  color: #eee;
+  word-break: break-all;
+}
+
+.md-import-body .md-subtitle {
+  font-size: 13px;
+  color: #aaa;
+  margin: 0 0 16px 0;
+}
+
+.md-import-body .md-footer {
+  border-top: 1px solid #444;
+  padding-top: 12px;
+  margin-top: 8px;
+}
+
+.md-import-body .md-checkbox-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid #555;
+  border-radius: 4px;
+  padding: 10px 12px;
+  cursor: pointer;
+}
+
+.md-import-body .md-checkbox-row input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  margin-top: 1px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.md-import-body .md-checkbox-text strong {
+  display: block;
+  font-size: 13px;
+  color: #ddd;
+  margin-bottom: 2px;
+}
+
+.md-import-body .md-checkbox-text span {
+  font-size: 12px;
+  color: #999;
+  line-height: 1.4;
+}
