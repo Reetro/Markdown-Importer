@@ -74,7 +74,7 @@ export async function createMerchantSheet(parsed) {
   });
 
   // Open the merchant sheet
-  const { MerchantSheet } = await import("/modules/merchant-sheet/scripts/main.js");
+  const { MerchantSheet } = await import("/modules/merchant-sheet/scripts/sheet.js");
   const sheet = new MerchantSheet(actor);
   sheet.render(true);
 
