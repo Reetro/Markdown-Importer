@@ -42,13 +42,6 @@ export class MarkdownEditorApp extends foundry.applications.api.ApplicationV2 {
         background:var(--color-bg-option, rgba(0,0,0,0.2));
         flex-shrink:0;
       ">
-        <label style="font-size:13px; white-space:nowrap;">File name:</label>
-        <input
-          id="md-editor-filename"
-          type="text"
-          value="${this._filename}"
-          style="flex:1; font-size:13px; background:transparent; border:1px solid #555; border-radius:3px; padding:2px 6px; color:inherit;"
-        >
         <label style="font-size:12px; opacity:0.6; white-space:nowrap;">
           <kbd style="background:#333; padding:1px 4px; border-radius:2px;">Tab</kbd> = 2 spaces
         </label>
