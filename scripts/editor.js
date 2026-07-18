@@ -173,4 +173,8 @@ export function openMarkdownEditor() {
   }
   _editorInstance = new MarkdownEditorApp();
   _editorInstance.render(true);
+  // Clear reference when the window is closed so it can be reopened
+  _editorInstance.addEventListener("close", () => {
+    _editorInstance = null;
+  });
 }
