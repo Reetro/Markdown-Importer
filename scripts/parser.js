@@ -156,6 +156,59 @@ function extractEquipment(text, keys = ["Equipment"]) {
     .filter(Boolean);
 }
 
+// ─── Shop item parser ─────────────────────────────────────────────────────────
+// Parses ## Shop sections with format:
+// - Item Name | 15 gp
+// - Item Name | 50 gp | qty: 5
+// - Item Name | 1 cp | qty: unlimited
+
+function extractShopItems(text, keys = ["Shop", "Shop Inventory", "Wares"]) {
+  const raw = getSectionText(text, ...keys);
+  if (!raw) return [];
+
+  const CURRENCIES = ["cp", "sp", "ep", "gp", "pp"];
+  const items = [];
+
+  for (const line of raw.split("\n")) {
+    const trimmed = line.trim();
+    if (!trimmed.startsWith("-")) continue;
+
+    const clean  = trimmed.replace(/^-\s*/, "").trim();
+    const parts  = clean.split("|").map(p => p.trim());
+
+    const name = parts[0];
+    if (!name) continue;
+
+    // Parse price — look for a number followed by a currency code
+    let price    = 0;
+    let currency = "gp";
+    let quantity = -1; // -1 = unlimited
+
+    for (let i = 1; i < parts.length; i++) {
+      const part = parts[i].toLowerCase();
+
+      // Quantity — "qty: 5" or "qty: unlimited" or "x5"
+      if (/qty\s*:/i.test(parts[i])) {
+        const qVal = parts[i].replace(/qty\s*:\s*/i, "").trim().toLowerCase();
+        quantity = qVal === "unlimited" || qVal === "∞" ? -1 : parseInt(qVal) || -1;
+        continue;
+      }
+
+      // Price — "15 gp" or "15gp"
+      const priceMatch = part.match(/^([\d,]+)\s*(cp|sp|ep|gp|pp)?$/);
+      if (priceMatch) {
+        price    = parseInt(priceMatch[1].replace(/,/g, "")) || 0;
+        currency = priceMatch[2] || "gp";
+        continue;
+      }
+    }
+
+    items.push({ name, price, currency, quantity });
+  }
+
+  return items;
+}
+
 function parseDuration(raw) {
   if (!raw) return { value: "", units: "inst" };
   const lower = raw.toLowerCase().trim();
@@ -287,5 +340,6 @@ export function parseMarkdown(text) {
     bonusActions:   getSection(text, ...bonusKeys),
     spells:         extractSpells(text, spellKeys),
     equipment:      extractEquipment(text, equipmentKeys),
+    shopItems:      extractShopItems(text),
   };
 }

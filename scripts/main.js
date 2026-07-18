@@ -11,6 +11,89 @@ import { registerSettings,
          getSetting }         from "./settings.js";
 import { openMarkdownEditor } from "./editor.js";
 
+// ─── Merchant Sheet integration ───────────────────────────────────────────────
+
+async function createMerchantSheet(parsed) {
+  // Create a basic NPC actor to hold the merchant data
+  const actor = await Actor.create({
+    name:  parsed.title || "Merchant",
+    type:  "npc",
+    img:   "icons/svg/item-bag.svg",
+    system: {
+      attributes: { hp: { value: 1, max: 1 } },
+      details:    { biography: { value: parsed.loreRaw || "" } },
+    },
+    prototypeToken: {
+      name:        parsed.title || "Merchant",
+      displayName: 20,
+      actorLink:   false,
+      disposition: 1,
+    },
+  });
+
+  const MODULE_ID = "merchant-sheet";
+
+  // Build shop items from the ## Shop section
+  // Try to look up each item in the compendium for proper icons and data
+  const items = await Promise.all((parsed.shopItems || []).map(async shopItem => {
+    // Search all item packs for a matching name
+    let img  = "icons/svg/item-bag.svg";
+    let type = "loot";
+    let uuid = null;
+
+    for (const pack of game.packs.filter(p => p.metadata.type === "Item")) {
+      try {
+        const index = await pack.getIndex({ fields: ["name", "img", "type"] });
+        const entry = index.find(e => e.name.toLowerCase() === shopItem.name.toLowerCase());
+        if (entry) {
+          img  = entry.img  || img;
+          type = entry.type || type;
+          uuid = `${pack.collection}.${entry._id}`;
+          break;
+        }
+      } catch { /* skip pack */ }
+    }
+
+    return {
+      id:       foundry.utils.randomID(),
+      uuid,
+      name:     shopItem.name,
+      img,
+      type,
+      category: getCategoryFromType(type),
+      price:    shopItem.price,
+      currency: shopItem.currency,
+      quantity: shopItem.quantity,
+    };
+  }));
+
+  await actor.setFlag(MODULE_ID, "inventory", {
+    items,
+    name: parsed.title || "Merchant",
+    img:  actor.img,
+  });
+
+  // Open the merchant sheet
+  const { MerchantSheet } = await import("/modules/merchant-sheet/scripts/main.js");
+  const sheet = new MerchantSheet(actor);
+  sheet.render(true);
+
+  ui.notifications.info(`Markdown Importer: Created merchant "${actor.name}" with ${items.length} item${items.length !== 1 ? "s" : ""}`);
+}
+
+function getCategoryFromType(type) {
+  const map = {
+    weapon:    "Weapons",
+    equipment: "Armor & Equipment",
+    consumable:"Consumables",
+    tool:      "Tools",
+    loot:      "Loot",
+    spell:     "Spells",
+    feat:      "Features",
+  };
+  return map[type] || "Miscellaneous";
+}
+
 // ─── Drop handler ─────────────────────────────────────────────────────────────
 
 async function handleFileDrop(files) {
@@ -29,6 +112,8 @@ async function handleFileDrop(files) {
       } else if (choice.type === "pc") {
         const actor = await createPCActor(parseMarkdown(text));
         ui.notifications.info(`Markdown Importer: Created character "${actor.name}"`);
+      } else if (choice.type === "merchant") {
+        await createMerchantSheet(parseMarkdown(text));
       } else {
         const journal = await createJournalEntry(text, file.name);
         ui.notifications.info(`Markdown Importer: Created journal "${journal.name}"`);

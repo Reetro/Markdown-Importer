@@ -1,8 +1,61 @@
 // Markdown Importer — dialog.js
 // Uses foundry.applications.api.DialogV2 (Foundry v13+)
 
+function isMerchantSheetInstalled() {
+  return game.modules.get("merchant-sheet")?.active ?? false;
+}
+
 export function askImportType(filename) {
   return new Promise(resolve => {
+    const hasMerchant = isMerchantSheetInstalled();
+
+    const buttons = [
+      {
+        icon:     "fa-dragon",
+        label:    "NPC Actor",
+        action:   "npc",
+        callback: (event, button, dialog) => ({
+          type: "npc",
+          useLookup: dialog.element.querySelector("#md-lookup")?.checked ?? false,
+        }),
+      },
+      {
+        icon:     "fa-user",
+        label:    "Player Character",
+        action:   "pc",
+        callback: (event, button, dialog) => ({
+          type: "pc",
+          useLookup: dialog.element.querySelector("#md-lookup")?.checked ?? false,
+        }),
+      },
+      {
+        icon:     "fa-book-open",
+        label:    "Journal Entry",
+        action:   "journal",
+        callback: () => ({ type: "journal", useLookup: false }),
+      },
+    ];
+
+    // Only show merchant button if Merchant Sheet module is active
+    if (hasMerchant) {
+      buttons.push({
+        icon:     "fa-store",
+        label:    "Merchant Shop",
+        action:   "merchant",
+        callback: (event, button, dialog) => ({
+          type: "merchant",
+          useLookup: dialog.element.querySelector("#md-lookup")?.checked ?? false,
+        }),
+      });
+    }
+
+    buttons.push({
+      icon:     "fa-times",
+      label:    "Cancel",
+      action:   "cancel",
+      callback: () => null,
+    });
+
     foundry.applications.api.DialogV2.wait({
       window: { title: "Markdown Importer" },
       position: { width: 700 },
@@ -29,38 +82,7 @@ export function askImportType(filename) {
           </div>
         </div>
       `,
-      buttons: [
-        {
-          icon:     "fa-dragon",
-          label:    "NPC Actor",
-          action:   "npc",
-          callback: (event, button, dialog) => ({
-            type: "npc",
-            useLookup: dialog.element.querySelector("#md-lookup")?.checked ?? false,
-          }),
-        },
-        {
-          icon:     "fa-user",
-          label:    "Player Character",
-          action:   "pc",
-          callback: (event, button, dialog) => ({
-            type: "pc",
-            useLookup: dialog.element.querySelector("#md-lookup")?.checked ?? false,
-          }),
-        },
-        {
-          icon:     "fa-book-open",
-          label:    "Journal Entry",
-          action:   "journal",
-          callback: () => ({ type: "journal", useLookup: false }),
-        },
-        {
-          icon:     "fa-times",
-          label:    "Cancel",
-          action:   "cancel",
-          callback: () => null,
-        },
-      ],
+      buttons,
       close: () => resolve(null),
     }).then(result => resolve(result)).catch(() => resolve(null));
   });
