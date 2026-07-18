@@ -12,64 +12,34 @@ const MODULE_ID = "markdown-importer";
 
 export class MarkdownEditorApp extends foundry.applications.api.ApplicationV2 {
   static DEFAULT_OPTIONS = {
-    id:       "markdown-importer-editor",
-    tag:      "div",
+    id:    "markdown-importer-editor",
     window: {
       title:     "Markdown Importer — Editor",
       resizable: true,
+      minimizable: true,
     },
     position: {
       width:  780,
       height: 600,
     },
+    classes: ["markdown-importer-editor"],
   };
 
   static PARTS = {
     main: { template: false },
   };
 
-  // Track editor content across re-renders
-  _content = "";
+  _content  = "";
   _filename = "untitled.md";
 
   async _renderHTML(context, options) {
     const el = document.createElement("div");
-    el.style.cssText = "display:flex; flex-direction:column; height:100%; padding:0;";
+    el.style.cssText = "display:flex; flex-direction:column; height:100%; padding:0; overflow:hidden;";
     el.innerHTML = `
-      <div style="
-        display:flex; align-items:center; gap:8px;
-        padding:8px 12px; border-bottom:1px solid var(--color-border-dark, #444);
-        background:var(--color-bg-option, rgba(0,0,0,0.2));
-        flex-shrink:0;
-      ">
-        <label style="font-size:12px; opacity:0.6; white-space:nowrap;">
-          <kbd style="background:#333; padding:1px 4px; border-radius:2px;">Tab</kbd> = 2 spaces
-        </label>
-      </div>
-
       <textarea
         id="md-editor-area"
         spellcheck="false"
-        placeholder="Paste or write your markdown here...
-
-# NPC Name
-*Medium Humanoid, Neutral*
-
-**Armor Class** 14
-**Hit Points** 52 (8d8 + 16)
-**Speed** 30 ft.
-
-| STR | DEX | CON | INT | WIS | CHA |
-|:---:|:---:|:---:|:---:|:---:|:---:|
-| 14 (+2) | 12 (+1) | 14 (+2) | 10 (+0) | 12 (+1) | 10 (+0) |
-
-## Features
-
-**Ability Name.** Description here.
-
-## Actions
-
-**Attack Name.** Melee Weapon Attack: +4 to hit, reach 5 ft., one target. Hit: 7 (1d8 + 2) slashing damage."
+        placeholder="Paste or write your markdown here..."
         style="
           flex:1; resize:none; border:none; outline:none;
           background:var(--color-bg-primary, #1a1a1a);
@@ -122,23 +92,16 @@ export class MarkdownEditorApp extends foundry.applications.api.ApplicationV2 {
   }
 
   _onRender(context, options) {
-    const area     = this.element.querySelector("#md-editor-area");
-    const filename = this.element.querySelector("#md-editor-filename");
-    const status   = this.element.querySelector("#md-editor-status");
+    const area   = this.element.querySelector("#md-editor-area");
+    const status = this.element.querySelector("#md-editor-status");
 
-    // Restore saved content
     if (this._content) area.value = this._content;
 
-    // Save content on input
     area.addEventListener("input", () => {
       this._content = area.value;
       const lines = area.value.split("\n").length;
       const words = area.value.trim() ? area.value.trim().split(/\s+/).length : 0;
       status.textContent = `${lines} lines · ${words} words`;
-    });
-
-    filename.addEventListener("input", () => {
-      this._filename = filename.value || "untitled.md";
     });
 
     // Tab key inserts 2 spaces
@@ -192,7 +155,11 @@ export class MarkdownEditorApp extends foundry.applications.api.ApplicationV2 {
       console.error("Markdown Importer editor error:", err);
       ui.notifications.error(`Markdown Importer: Failed — ${err.message}`);
       status.textContent = `Error: ${err.message}`;
+      return;
     }
+
+    // Close the editor after a successful save
+    this.close();
   }
 }
 
