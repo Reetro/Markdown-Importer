@@ -82,6 +82,15 @@ export class MarkdownEditorApp extends foundry.applications.api.ApplicationV2 {
         ">
           <i class="fas fa-book-open"></i> Save as Journal
         </button>
+
+        ${game.modules.get("merchant-sheet")?.active ? `
+        <button type="button" id="md-save-merchant" style="
+          background:#3a2a10; border:1px solid #7a5a20; color:#ffe0a0;
+          padding:6px 14px; border-radius:4px; cursor:pointer; font-size:13px;
+          display:flex; align-items:center; gap:6px;
+        ">
+          <i class="fas fa-store"></i> Save as Shop
+        </button>` : ""}
       </div>
     `;
     return el;
@@ -123,6 +132,8 @@ export class MarkdownEditorApp extends foundry.applications.api.ApplicationV2 {
       this._doImport("pc", area, status));
     this.element.querySelector("#md-save-journal").addEventListener("click", () =>
       this._doImport("journal", area, status));
+    this.element.querySelector("#md-save-merchant")?.addEventListener("click", () =>
+      this._doImport("merchant", area, status));
   }
 
   async _doImport(type, area, status) {
@@ -145,6 +156,11 @@ export class MarkdownEditorApp extends foundry.applications.api.ApplicationV2 {
         const actor = await createPCActor(parseMarkdown(text));
         ui.notifications.info(`Markdown Importer: Created character "${actor.name}"`);
         status.textContent = `Saved as character: ${actor.name}`;
+
+      } else if (type === "merchant") {
+        const { createMerchantSheet } = await import("./main.js");
+        await createMerchantSheet(parseMarkdown(text));
+        status.textContent = `Saved as merchant shop`;
 
       } else {
         const journal = await createJournalEntry(text, fname);
