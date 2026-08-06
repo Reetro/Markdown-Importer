@@ -13,6 +13,102 @@ import { openMarkdownEditor } from "./editor.js";
 
 // ─── Merchant Sheet integration ───────────────────────────────────────────────
 
+// ─── Custom item creation ─────────────────────────────────────────────────────
+
+const ITEM_TYPE_MAP = {
+  weapon:     "weapon",
+  armor:      "equipment",
+  armour:     "equipment",
+  equipment:  "equipment",
+  consumable: "consumable",
+  potion:     "consumable",
+  tool:       "tool",
+  loot:       "loot",
+  treasure:   "loot",
+  feature:    "feat",
+  spell:      "spell",
+};
+
+const RARITY_MAP = {
+  common:    "common",
+  uncommon:  "uncommon",
+  rare:      "rare",
+  "very rare": "veryRare",
+  veryrare:  "veryRare",
+  legendary: "legendary",
+  artifact:  "artifact",
+};
+
+async function createCustomShopItem(shopItem) {
+  const props  = shopItem.customProps || {};
+  const type   = ITEM_TYPE_MAP[props.type?.toLowerCase()] || "loot";
+  const rarity = RARITY_MAP[props.rarity?.toLowerCase()] || "common";
+  const weight = parseFloat(props.weight) || 0;
+  const description = props.description || "";
+  const icon   = props.icon || resolveIconForType(type, shopItem.name);
+  const damage = props.damage || null;
+  const damageType = props["damage type"] || props.damagetype || null;
+  const range  = props.range || null;
+  const acBonus = parseInt(props.ac) || null;
+
+  // Build system data based on type
+  const system = {
+    description: { value: `<p>${description}</p>` },
+    rarity,
+    price:  { value: shopItem.price, denomination: shopItem.currency },
+    weight: { value: weight },
+    quantity: shopItem.quantity === -1 ? 1 : shopItem.quantity,
+  };
+
+  if (type === "weapon" && damage) {
+    const dmgMatch = damage.match(/(\d+d\d+)(?:\s*\+\s*(\d+))?/i);
+    system.damage = {
+      base: {
+        number:  dmgMatch ? parseInt(dmgMatch[1]) : 1,
+        denomination: dmgMatch ? parseInt(dmgMatch[1].split("d")[1]) : 4,
+        types:   damageType ? [damageType.toLowerCase()] : [],
+      },
+    };
+    if (range) {
+      const rangeMatch = range.match(/(\d+)(?:\/(\d+))?/);
+      system.range = {
+        value:  rangeMatch ? parseInt(rangeMatch[1]) : 5,
+        long:   rangeMatch?.[2] ? parseInt(rangeMatch[2]) : null,
+        units:  "ft",
+      };
+    }
+  }
+
+  if (type === "equipment" && acBonus) {
+    system.armor = { value: acBonus };
+  }
+
+  // Create the item in the world
+  const itemData = {
+    name:   shopItem.name,
+    type,
+    img:    icon,
+    system,
+  };
+
+  const created = await Item.create(itemData);
+  ui.notifications.info(`Markdown Importer: Created custom item "${created.name}"`);
+  return created;
+}
+
+function resolveIconForType(type, name) {
+  const defaults = {
+    weapon:     "icons/weapons/swords/sword-guard-gold.webp",
+    equipment:  "icons/equipment/chest/breastplate-steel-grey.webp",
+    consumable: "icons/consumables/potions/potion-flask-round-red.webp",
+    tool:       "icons/tools/hand/hammer-claw-steel-grey.webp",
+    loot:       "icons/commodities/treasure/coins-plain-stack-gold-large.webp",
+    feat:       "icons/magic/symbols/rune-star-triangle.webp",
+    spell:      "icons/magic/light/beam-rays-yellow.webp",
+  };
+  return defaults[type] || "icons/svg/item-bag.svg";
+}
+
 export async function createMerchantSheet(parsed) {
   // Create a basic NPC actor to hold the merchant data
   const actor = await Actor.create({
@@ -36,7 +132,30 @@ export async function createMerchantSheet(parsed) {
   // Build shop items from the ## Shop section
   // Try to look up each item in the compendium for proper icons and data
   const items = await Promise.all((parsed.shopItems || []).map(async shopItem => {
-    // Search all item packs for a matching name
+    // Handle custom items — create them as real world items
+    if (shopItem.custom) {
+      try {
+        const created = await createCustomShopItem(shopItem);
+        return {
+          id:       foundry.utils.randomID(),
+          uuid:     created.uuid,
+          name:     created.name,
+          img:      created.img,
+          type:     created.type,
+          category: getCategoryFromType(created.type),
+          price:    shopItem.price,
+          currency: shopItem.currency,
+          quantity: shopItem.quantity,
+        };
+      } catch(e) {
+        console.error(`Markdown Importer: Failed to create custom item "${shopItem.name}":`, e);
+        return null;
+      }
+    }
+
+    // Standard compendium lookup for non-custom items
+
+    // Standard compendium lookup for non-custom items
     let img  = "icons/svg/item-bag.svg";
     let type = "loot";
     let uuid = null;
@@ -67,10 +186,13 @@ export async function createMerchantSheet(parsed) {
     };
   }));
 
+  // Filter out any failed custom items
+  const validItems = items.filter(Boolean);
+
   await actor.setFlag(MODULE_ID, "inventory", {
-    items,
-    name: parsed.title || "Merchant",
-    img:  actor.img,
+    items:  validItems,
+    name:   parsed.title || "Merchant",
+    img:    actor.img,
   });
 
   // Open the merchant sheet
@@ -78,7 +200,7 @@ export async function createMerchantSheet(parsed) {
   const sheet = new MerchantSheet(actor);
   sheet.render(true);
 
-  ui.notifications.info(`Markdown Importer: Created merchant "${actor.name}" with ${items.length} item${items.length !== 1 ? "s" : ""}`);
+  ui.notifications.info(`Markdown Importer: Created merchant "${actor.name}" with ${validItems.length} item${validItems.length !== 1 ? "s" : ""}`);
 }
 
 function getCategoryFromType(type) {

@@ -166,35 +166,35 @@ function extractShopItems(text, keys = ["Shop", "Shop Inventory", "Wares"]) {
   const raw = getSectionText(text, ...keys);
   if (!raw) return [];
 
-  const CURRENCIES = ["cp", "sp", "ep", "gp", "pp"];
   const items = [];
+  const lines = raw.split("\n");
+  let i = 0;
 
-  for (const line of raw.split("\n")) {
-    const trimmed = line.trim();
+  while (i < lines.length) {
+    const trimmed = lines[i].trim();
+    i++;
+
     if (!trimmed.startsWith("-")) continue;
 
-    const clean  = trimmed.replace(/^-\s*/, "").trim();
-    const parts  = clean.split("|").map(p => p.trim());
+    const clean = trimmed.replace(/^-\s*/, "").trim();
+    const parts = clean.split("|").map(p => p.trim());
 
     const name = parts[0];
     if (!name) continue;
 
-    // Parse price — look for a number followed by a currency code
     let price    = 0;
     let currency = "gp";
-    let quantity = -1; // -1 = unlimited
+    let quantity = -1;
+    let custom   = false;
 
-    for (let i = 1; i < parts.length; i++) {
-      const part = parts[i].toLowerCase();
-
-      // Quantity — "qty: 5" or "qty: unlimited" or "x5"
-      if (/qty\s*:/i.test(parts[i])) {
-        const qVal = parts[i].replace(/qty\s*:\s*/i, "").trim().toLowerCase();
+    for (let j = 1; j < parts.length; j++) {
+      const part = parts[j].toLowerCase().trim();
+      if (part === "custom") { custom = true; continue; }
+      if (/qty\s*:/i.test(parts[j])) {
+        const qVal = parts[j].replace(/qty\s*:\s*/i, "").trim().toLowerCase();
         quantity = qVal === "unlimited" || qVal === "∞" ? -1 : parseInt(qVal) || -1;
         continue;
       }
-
-      // Price — "15 gp" or "15gp"
       const priceMatch = part.match(/^([\d,]+)\s*(cp|sp|ep|gp|pp)?$/);
       if (priceMatch) {
         price    = parseInt(priceMatch[1].replace(/,/g, "")) || 0;
@@ -203,7 +203,22 @@ function extractShopItems(text, keys = ["Shop", "Shop Inventory", "Wares"]) {
       }
     }
 
-    items.push({ name, price, currency, quantity });
+    // Parse custom item sub-properties (indented lines starting with -)
+    let customProps = null;
+    if (custom) {
+      customProps = {};
+      while (i < lines.length && /^\s{2,}-/.test(lines[i])) {
+        const propLine = lines[i].trim().replace(/^-\s*/, "");
+        i++;
+        const colonIdx = propLine.indexOf(":");
+        if (colonIdx === -1) continue;
+        const key = propLine.slice(0, colonIdx).trim().toLowerCase();
+        const val = propLine.slice(colonIdx + 1).trim();
+        customProps[key] = val;
+      }
+    }
+
+    items.push({ name, price, currency, quantity, custom, customProps });
   }
 
   return items;
