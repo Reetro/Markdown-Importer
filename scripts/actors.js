@@ -1,7 +1,8 @@
 // Markdown Importer — actors.js
 // Creates NPC and PC actors in Foundry from parsed markdown data
 
-import { attachItems } from "./items.js";
+import { attachItems }       from "./items.js";
+import { attachCustomItems } from "./customItems.js";
 import { findClassInCompendium } from "./compendium.js";
 
 function bio(loreRaw) {
@@ -52,6 +53,7 @@ export async function createNPCActor(p) {
   });
 
   await attachItems(actor, p, "npc");
+  await attachCustomItems(actor, p);
   return actor;
 }
 
@@ -93,6 +95,7 @@ export async function createPCActor(p) {
 
   await attachItems(actor, p, "character");
   await attachClass(actor, p);
+  await attachCustomItems(actor, p);
   return actor;
 }
 

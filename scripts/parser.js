@@ -224,7 +224,40 @@ function extractShopItems(text, keys = ["Shop", "Shop Inventory", "Wares"]) {
   return items;
 }
 
-function parseDuration(raw) {
+function extractCustomItems(text, keys = ["Custom Items", "Custom"]) {
+  const raw = getSectionText(text, ...keys);
+  if (!raw) return [];
+
+  const ITEM_TYPES = ["weapon","equipment","armor","armour","consumable","potion","tool","loot","treasure","feat","feature","spell"];
+  const items = [];
+  const lines = raw.split("\n");
+  let i = 0;
+
+  while (i < lines.length) {
+    const trimmed = lines[i].trim();
+    i++;
+    if (!trimmed.startsWith("-")) continue;
+
+    const name = trimmed.replace(/^-\s*/, "").trim();
+    if (!name) continue;
+
+    // Read indented sub-properties
+    const props = {};
+    while (i < lines.length && /^\s{2,}-/.test(lines[i])) {
+      const propLine = lines[i].trim().replace(/^-\s*/, "");
+      i++;
+      const colonIdx = propLine.indexOf(":");
+      if (colonIdx === -1) continue;
+      const key = propLine.slice(0, colonIdx).trim().toLowerCase();
+      const val = propLine.slice(colonIdx + 1).trim();
+      props[key] = val;
+    }
+
+    items.push({ name, custom: true, customProps: props, price: 0, currency: "gp", quantity: 1 });
+  }
+
+  return items;
+}
   if (!raw) return { value: "", units: "inst" };
   const lower = raw.toLowerCase().trim();
   if (/instant/i.test(lower)) return { value: "", units: "inst" };
@@ -356,5 +389,6 @@ export function parseMarkdown(text) {
     spells:         extractSpells(text, spellKeys),
     equipment:      extractEquipment(text, equipmentKeys),
     shopItems:      extractShopItems(text),
+    customItems:    extractCustomItems(text),
   };
 }

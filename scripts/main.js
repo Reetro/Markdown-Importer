@@ -2,6 +2,7 @@
 // Entry point. Registers settings, toolbar button, and canvas drop handler.
 
 import { parseMarkdown }      from "./parser.js";
+import { createCustomItem }  from "./customItems.js";
 import { createNPCActor,
          createPCActor }      from "./actors.js";
 import { createJournalEntry } from "./journal.js";
@@ -12,102 +13,6 @@ import { registerSettings,
 import { openMarkdownEditor } from "./editor.js";
 
 // ─── Merchant Sheet integration ───────────────────────────────────────────────
-
-// ─── Custom item creation ─────────────────────────────────────────────────────
-
-const ITEM_TYPE_MAP = {
-  weapon:     "weapon",
-  armor:      "equipment",
-  armour:     "equipment",
-  equipment:  "equipment",
-  consumable: "consumable",
-  potion:     "consumable",
-  tool:       "tool",
-  loot:       "loot",
-  treasure:   "loot",
-  feature:    "feat",
-  spell:      "spell",
-};
-
-const RARITY_MAP = {
-  common:    "common",
-  uncommon:  "uncommon",
-  rare:      "rare",
-  "very rare": "veryRare",
-  veryrare:  "veryRare",
-  legendary: "legendary",
-  artifact:  "artifact",
-};
-
-async function createCustomShopItem(shopItem) {
-  const props  = shopItem.customProps || {};
-  const type   = ITEM_TYPE_MAP[props.type?.toLowerCase()] || "loot";
-  const rarity = RARITY_MAP[props.rarity?.toLowerCase()] || "common";
-  const weight = parseFloat(props.weight) || 0;
-  const description = props.description || "";
-  const icon   = props.icon || resolveIconForType(type, shopItem.name);
-  const damage = props.damage || null;
-  const damageType = props["damage type"] || props.damagetype || null;
-  const range  = props.range || null;
-  const acBonus = parseInt(props.ac) || null;
-
-  // Build system data based on type
-  const system = {
-    description: { value: `<p>${description}</p>` },
-    rarity,
-    price:  { value: shopItem.price, denomination: shopItem.currency },
-    weight: { value: weight },
-    quantity: shopItem.quantity === -1 ? 1 : shopItem.quantity,
-  };
-
-  if (type === "weapon" && damage) {
-    const dmgMatch = damage.match(/(\d+d\d+)(?:\s*\+\s*(\d+))?/i);
-    system.damage = {
-      base: {
-        number:  dmgMatch ? parseInt(dmgMatch[1]) : 1,
-        denomination: dmgMatch ? parseInt(dmgMatch[1].split("d")[1]) : 4,
-        types:   damageType ? [damageType.toLowerCase()] : [],
-      },
-    };
-    if (range) {
-      const rangeMatch = range.match(/(\d+)(?:\/(\d+))?/);
-      system.range = {
-        value:  rangeMatch ? parseInt(rangeMatch[1]) : 5,
-        long:   rangeMatch?.[2] ? parseInt(rangeMatch[2]) : null,
-        units:  "ft",
-      };
-    }
-  }
-
-  if (type === "equipment" && acBonus) {
-    system.armor = { value: acBonus };
-  }
-
-  // Create the item in the world
-  const itemData = {
-    name:   shopItem.name,
-    type,
-    img:    icon,
-    system,
-  };
-
-  const created = await Item.create(itemData);
-  ui.notifications.info(`Markdown Importer: Created custom item "${created.name}"`);
-  return created;
-}
-
-function resolveIconForType(type, name) {
-  const defaults = {
-    weapon:     "icons/weapons/swords/sword-guard-gold.webp",
-    equipment:  "icons/equipment/chest/breastplate-steel-grey.webp",
-    consumable: "icons/consumables/potions/potion-flask-round-red.webp",
-    tool:       "icons/tools/hand/hammer-claw-steel-grey.webp",
-    loot:       "icons/commodities/treasure/coins-plain-stack-gold-large.webp",
-    feat:       "icons/magic/symbols/rune-star-triangle.webp",
-    spell:      "icons/magic/light/beam-rays-yellow.webp",
-  };
-  return defaults[type] || "icons/svg/item-bag.svg";
-}
 
 export async function createMerchantSheet(parsed) {
   // Create a basic NPC actor to hold the merchant data
@@ -135,7 +40,7 @@ export async function createMerchantSheet(parsed) {
     // Handle custom items — create them as real world items
     if (shopItem.custom) {
       try {
-        const created = await createCustomShopItem(shopItem);
+        const created = await createCustomItem(shopItem);
         return {
           id:       foundry.utils.randomID(),
           uuid:     created.uuid,
