@@ -189,32 +189,40 @@ Hooks.once("ready", () => {
 Hooks.on("getSceneControlButtons", controls => {
   // v14 — controls is an object keyed by group name
   if (controls && !Array.isArray(controls) && typeof controls === "object") {
-    // Try to add to the tiles group, fallback to notes group
-    const group = controls["tiles"] ?? controls["notes"] ?? Object.values(controls)[0];
-    if (group?.tools && typeof group.tools === "object" && !Array.isArray(group.tools)) {
-      group.tools["markdown-importer-editor"] = {
-        name:    "markdown-importer-editor",
-        title:   "Markdown Editor",
-        icon:    "fas fa-file-code",
-        button:  true,
-        order:   999,
-        onClick: () => openMarkdownEditor(),
-      };
-      return;
-    }
+    // Add as a top-level group with a single button so it appears in the main bar
+    controls["markdown-importer"] = {
+      name:    "markdown-importer",
+      title:   "Markdown Importer",
+      icon:    "fas fa-file-import",
+      layer:   "controls",
+      visible: true,
+      tools:   {
+        "markdown-editor": {
+          name:    "markdown-editor",
+          title:   "Markdown Editor",
+          icon:    "fas fa-file-code",
+          button:  true,
+          onClick: () => openMarkdownEditor(),
+        },
+      },
+    };
+    return;
   }
 
   // v12 — controls is an array
   if (Array.isArray(controls)) {
-    const group = controls.find(g => g.name === "tiles") ?? controls[0];
-    if (!group) return;
-    if (group.tools.some(t => t.name === "markdown-importer-editor")) return;
-    group.tools.push({
-      name:    "markdown-importer-editor",
-      title:   "Markdown Editor",
-      icon:    "fas fa-file-code",
-      button:  true,
-      onClick: () => openMarkdownEditor(),
+    controls.push({
+      name:    "markdown-importer",
+      title:   "Markdown Importer",
+      icon:    "fas fa-file-import",
+      layer:   "controls",
+      tools: [{
+        name:    "markdown-editor",
+        title:   "Markdown Editor",
+        icon:    "fas fa-file-code",
+        button:  true,
+        onClick: () => openMarkdownEditor(),
+      }],
     });
   }
 });
