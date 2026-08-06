@@ -258,6 +258,8 @@ function extractCustomItems(text, keys = ["Custom Items", "Custom"]) {
 
   return items;
 }
+
+function parseDuration(raw) {
   if (!raw) return { value: "", units: "inst" };
   const lower = raw.toLowerCase().trim();
   if (/instant/i.test(lower)) return { value: "", units: "inst" };
