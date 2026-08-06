@@ -187,31 +187,44 @@ Hooks.once("ready", () => {
 // ─── Toolbar button ───────────────────────────────────────────────────────────
 
 Hooks.on("getSceneControlButtons", controls => {
-  // v14 correct API — add to tokens group using onChange
-  if (controls?.tokens?.tools) {
-    controls.tokens.tools["markdown-editor"] = {
-      name:    "markdown-editor",
-      title:   "Markdown Editor",
-      icon:    "fa-solid fa-file-code",
-      order:   Object.keys(controls.tokens.tools).length,
-      button:  true,
-      visible: game.user.isGM,
-      onChange: () => openMarkdownEditor(),
+  // v14 — add as top-level control group
+  if (controls && !Array.isArray(controls)) {
+    controls["markdown-importer"] = {
+      name:       "markdown-importer",
+      title:      "Markdown Editor",
+      icon:       "fa-solid fa-file-code",
+      order:      Object.keys(controls).length,
+      visible:    true,
+      activeTool: "open-editor",
+      tools: {
+        "open-editor": {
+          name:    "open-editor",
+          title:   "Open Markdown Editor",
+          icon:    "fa-solid fa-file-code",
+          order:   0,
+          button:  true,
+          onChange: () => openMarkdownEditor(),
+        },
+      },
     };
     return;
   }
 
-  // v12 fallback — controls is an array
+  // v12 fallback
   if (Array.isArray(controls)) {
-    const group = controls.find(g => g.name === "tokens") ?? controls[0];
-    if (!group) return;
-    if (group.tools.some(t => t.name === "markdown-editor")) return;
-    group.tools.push({
-      name:    "markdown-editor",
-      title:   "Markdown Editor",
-      icon:    "fas fa-file-code",
-      button:  true,
-      onClick: () => openMarkdownEditor(),
+    controls.push({
+      name:       "markdown-importer",
+      title:      "Markdown Editor",
+      icon:       "fas fa-file-code",
+      layer:      "controls",
+      activeTool: "open-editor",
+      tools: [{
+        name:    "open-editor",
+        title:   "Open Markdown Editor",
+        icon:    "fas fa-file-code",
+        button:  true,
+        onClick: () => openMarkdownEditor(),
+      }],
     });
   }
 });
