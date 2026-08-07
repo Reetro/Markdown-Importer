@@ -187,44 +187,33 @@ Hooks.once("ready", () => {
 // ─── Toolbar button ───────────────────────────────────────────────────────────
 
 Hooks.on("getSceneControlButtons", controls => {
-  // v14 — add as top-level control group
+  // v14 — add to tiles group
   if (controls && !Array.isArray(controls)) {
-    controls["markdown-importer"] = {
-      name:       "markdown-importer",
-      title:      "Markdown Editor",
-      icon:       "fa-solid fa-file-code",
-      order:      Object.keys(controls).length,
-      visible:    true,
-      activeTool: "open-editor",
-      tools: {
-        "open-editor": {
-          name:    "open-editor",
-          title:   "Open Markdown Editor",
-          icon:    "fa-solid fa-file-code",
-          order:   0,
-          button:  true,
-          onChange: () => openMarkdownEditor(),
-        },
-      },
-    };
+    const tilesGroup = controls["tiles"];
+    if (tilesGroup?.tools) {
+      tilesGroup.tools["markdown-editor"] = {
+        name:     "markdown-editor",
+        title:    "Markdown Editor",
+        icon:     "fa-solid fa-file-code",
+        order:    Object.keys(tilesGroup.tools).length,
+        button:   true,
+        onChange: () => openMarkdownEditor(),
+      };
+    }
     return;
   }
 
   // v12 fallback
   if (Array.isArray(controls)) {
-    controls.push({
-      name:       "markdown-importer",
-      title:      "Markdown Editor",
-      icon:       "fas fa-file-code",
-      layer:      "controls",
-      activeTool: "open-editor",
-      tools: [{
-        name:    "open-editor",
-        title:   "Open Markdown Editor",
-        icon:    "fas fa-file-code",
-        button:  true,
-        onClick: () => openMarkdownEditor(),
-      }],
+    const group = controls.find(g => g.name === "tiles") ?? controls[0];
+    if (!group) return;
+    if (group.tools.some(t => t.name === "markdown-editor")) return;
+    group.tools.push({
+      name:    "markdown-editor",
+      title:   "Markdown Editor",
+      icon:    "fas fa-file-code",
+      button:  true,
+      onClick: () => openMarkdownEditor(),
     });
   }
 });
